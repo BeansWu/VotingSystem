@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Date;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -58,13 +59,39 @@ public class VoteServlet extends HttpServlet {
 		response.getWriter().print(result);
 	}
 	protected void vote(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//		String id = request.getParameter("id");
+//		userService.vote(id);
+//		ArrayList<User> candidates = userService.getCandidates();
+//		ObjectMapper mapper = new ObjectMapper();
+//		String result = mapper.writeValueAsString(candidates);
+//		response.setCharacterEncoding("UTF-8");
+//		response.setContentType("text/javascript");
+//		response.getWriter().print(result);
+		
 		String id = request.getParameter("id");
-		userService.vote(id);
-		ArrayList<User> candidates = userService.getCandidates();
 		ObjectMapper mapper = new ObjectMapper();
-		String result = mapper.writeValueAsString(candidates);
+		String result = null;
+		//计时器
+		Date time = (Date) request.getSession().getAttribute("time");
+		if (time == null) {
+			request.getSession().setAttribute("time", new Date());
+			userService.vote(id);
+			ArrayList<User> candidates = userService.getCandidates();
+			result = mapper.writeValueAsString(candidates);
+		} else {
+			Date now = new Date();
+			if ((now.getTime() - time.getTime()) <= 60000) {
+				result = mapper.writeValueAsString("Time limit.");
+			} else {
+				request.getSession().setAttribute("time", now);
+				userService.vote(id);
+				ArrayList<User> candidates = userService.getCandidates();
+				result = mapper.writeValueAsString(candidates);
+			}
+		}
 		response.setCharacterEncoding("UTF-8");
 		response.setContentType("text/javascript");
 		response.getWriter().print(result);
+		
 	}
 }
